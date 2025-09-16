@@ -2,7 +2,9 @@
 import { requireAuth, validateRequest } from '../utils/decorators.js';
 import * as yup from 'yup';
 import Task from '../models/task.model.js';
+import TaskDAO from '../src/dao/task.dao.js';
 import User from '../models/user.model.js';
+import UserDAO from '../src/dao/user.dao.js';
 
 // Define validation schema for task creation
 // Ensures all required fields are present and valid
@@ -86,17 +88,17 @@ class TaskController {
       console.log('✅ Validation passed, creating task with time:', time);
 
       // Create new task in database
-      const newTask = new Task({
+      const newTask = {
         title,
         detail,
         date,
         time: time || null, // Permitir null si no se proporciona
         status: status || 'Por hacer',
         user: userId
-      });
+      };
 
-      const savedTask = await newTask.save();
-      const populatedTask = await Task.findById(savedTask._id).populate('user', 'firstName lastName email');
+      const savedTask = await TaskDAO.create(newTask);
+      const populatedTask = await TaskDAO.findById(savedTask._id).populate('user', 'firstName lastName email');
 
       res.status(201).json({
         message: "Task created successfully",
@@ -132,7 +134,7 @@ class TaskController {
   async getTasks(req, res) {
     try {
       const userId = req.user.userId;
-      const userTasks = await Task.find({ user: userId }).populate('user', 'firstName lastName email');
+  const userTasks = await TaskDAO.find({ user: userId }).populate('user', 'firstName lastName email');
       
       res.status(200).json({
         message: "Tasks retrieved successfully",
@@ -157,7 +159,7 @@ class TaskController {
       const taskId = req.params.id;
       
       // Find task that belongs to the authenticated user
-      const task = await Task.findOne({ _id: taskId, user: userId }).populate('user', 'firstName lastName email');
+  const task = await TaskDAO.findOne({ _id: taskId, user: userId }).populate('user', 'firstName lastName email');
       
       if (!task) {
         return res.status(404).json({ message: 'Task not found' });
@@ -195,7 +197,7 @@ class TaskController {
       console.log('✅ Update validation passed, updating task with time:', updateData.time);
 
       // Find and update task that belongs to the authenticated user
-      const updatedTask = await Task.findOneAndUpdate(
+      const updatedTask = await TaskDAO.findOneAndUpdate(
         { _id: taskId, user: userId },
         updateData,
         { new: true, runValidators: true }
@@ -242,7 +244,7 @@ class TaskController {
       const taskId = req.params.id;
 
       // Find and delete task that belongs to the authenticated user
-      const deletedTask = await Task.findOneAndDelete({ _id: taskId, user: userId });
+  const deletedTask = await TaskDAO.findOneAndDelete({ _id: taskId, user: userId });
       
       if (!deletedTask) {
         return res.status(404).json({ message: 'Task not found' });

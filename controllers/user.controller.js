@@ -14,6 +14,7 @@ import multer from "multer";
 import { fileURLToPath } from "url";
 import * as yup from "yup";
 import User from "../models/user.model.js";
+import UserDAO from "../src/dao/user.dao.js";
 import { requireAuth, validateRequest } from "../utils/decorators.js";
 
 // Configure path for ES modules
@@ -191,7 +192,7 @@ class UserProfileController {
     try {
       const userId = req.user.userId;
 
-      const user = await User.findById(userId).select(
+      const user = await UserDAO.findById(userId).select(
         "-password -resetPasswordToken -resetPasswordExpires -googleId"
       );
 
@@ -256,7 +257,7 @@ class UserProfileController {
       const { firstName, lastName, age, email } = req.body;
 
       // Check if email is already taken by another user
-      const existingUser = await User.findOne({
+      const existingUser = await UserDAO.findOne({
         email,
         _id: { $ne: userId },
       });
@@ -269,7 +270,7 @@ class UserProfileController {
       }
 
       // Update user
-      const updatedUser = await User.findByIdAndUpdate(
+      const updatedUser = await UserDAO.findByIdAndUpdate(
         userId,
         {
           firstName: firstName.trim(),
@@ -347,7 +348,7 @@ class UserProfileController {
       const { currentPassword, newPassword } = req.body;
 
       // Get user with password
-      const user = await User.findById(userId);
+  const user = await UserDAO.findById(userId);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -494,7 +495,7 @@ class UserProfileController {
       const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
       // Update user with new avatar
-      const updatedUser = await User.findByIdAndUpdate(
+      const updatedUser = await UserDAO.findByIdAndUpdate(
         userId,
         {
           avatar: avatarUrl,
