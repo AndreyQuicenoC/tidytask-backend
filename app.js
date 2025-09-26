@@ -12,12 +12,11 @@ import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 //import passport from "passport";
-import "./config/passport.js";
+import "./src/config/passport.js";
 import { fileURLToPath } from "url";
-import connectDB from "./config/database.js";
-import authRoutes from "./routes/auth.routes.js";
-import taskRoutes from "./routes/tasks.routes.js";
-import userRoutes from "./routes/user.routes.js";
+import { connectDB } from "./src/config/index.js";
+// Import routes from new architecture
+import { authRoutes, tasksRoutes, userRoutes } from "./src/routes/index.js";
 
 /**
  * File path configuration for ES modules
@@ -47,9 +46,12 @@ if (process.env.FRONTEND_URL) {
 
 // En producción, usar la URL del frontend definida en .env
 if (process.env.NODE_ENV === "production") {
-  allowedOrigins = [process.env.FRONTEND_URL];
+  allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "https://tidytask-frontend-pi1.vercel.app"
+  ];
 } else {
-  // En desarrollo, permitir localhost con varios puertos comunes
+  // En desarrollo, permitir localhost con varios puertos comunes y también la URL de producción
   allowedOrigins = [
     "http://localhost:5173", // Vite default
     "http://localhost:3000", // Common React port
@@ -57,6 +59,8 @@ if (process.env.NODE_ENV === "production") {
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8080",
+    "http://localhost:3000",
+    "https://tidytask-frontend-pi1.vercel.app", // Production frontend
   ];
 }
 
@@ -143,10 +147,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /**
  * API Routes Configuration
- * @description Mounts all API route handlers with appropriate prefixes
+ * @description Mounts all API route handlers with appropriate prefixes using new architecture
  */
 app.use("/api/auth", authRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/tasks", tasksRoutes);
 app.use("/api/users", userRoutes);
 
 /**
